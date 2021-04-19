@@ -1,14 +1,16 @@
-import { useReducer } from "react"
+import { useReducer } from "react";
 
 function uuid() {
-  return "" + Math.random() // since this doesn't really matter
+  return "" + Math.random(); // since this doesn't really matter
 }
 
-type AppState = unknown // Fix
+type AppState = {
+  [type: string]: { id: string; x: number; y: number };
+};
 
 function getInitialState(): AppState {
-  const id1 = uuid()
-  const id2 = uuid()
+  const id1 = uuid();
+  const id2 = uuid();
 
   return {
     [id1]: {
@@ -21,16 +23,28 @@ function getInitialState(): AppState {
       x: 100,
       y: 100
     }
-  }
+  };
 }
 
-type AppActions = unknown // Fix
+type AppActions =
+  | {
+      type: "move";
+      id: string;
+      deltaX: number;
+      deltaY: number;
+    }
+  | {
+      type: "add";
+      id: string;
+      x: number;
+      y: number;
+    };
 
 const circlesReducer: React.Reducer<AppState, AppActions> = (state, action) => {
   switch (action.type) {
     case "move": {
-      const { deltaX, deltaY, id } = action
-      const base = state[id]
+      const { deltaX, deltaY, id } = action;
+      const base = state[id];
       return {
         ...state,
         [id]: {
@@ -38,19 +52,19 @@ const circlesReducer: React.Reducer<AppState, AppActions> = (state, action) => {
           x: base.x + deltaX,
           y: base.y + deltaY
         }
-      }
+      };
     }
     case "add": {
-      const { id, x, y } = action
+      const { id, x, y } = action;
       return {
         ...state,
         [id]: { id, x, y }
-      }
+      };
     }
     default:
-      return state
+      return state;
   }
-}
+};
 
 {
   // In this exercise a React reducer must be typed correctly
@@ -59,35 +73,35 @@ const circlesReducer: React.Reducer<AppState, AppActions> = (state, action) => {
 
   // Then, define the possible action types correctly
 
-  const [state, dispatch] = useReducer(circlesReducer, getInitialState())
+  const [state, dispatch] = useReducer(circlesReducer, getInitialState());
 
   // OK
-  const x: number = state["xyz"].x
+  const x: number = state["xyz"].x;
 
   dispatch({
     type: "move",
     id: "xyz",
     deltaX: 3,
     deltaY: 2
-  })
+  });
 
   // Also verify: action parameters inside the reducer should be correctly inferred!
 
   // Not OK! Following statements should all fail:
-  const y: string = state["xyz"].x
+  const y: string = state["xyz"].x;
 
   dispatch({
     type: "move",
     id: "xyz",
     deltaX: "3",
     deltaY: 2
-  })
-  
-  dispatch({
-    type: "add",
-  })
+  });
 
   dispatch({
-    type: "test",
-  })
+    type: "add"
+  });
+
+  dispatch({
+    type: "test"
+  });
 }
