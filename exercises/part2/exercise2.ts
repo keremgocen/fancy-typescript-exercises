@@ -1,40 +1,107 @@
+import { useReducer } from "react";
+
+function uuid() {
+  return "" + Math.random(); // since this doesn't really matter
+}
+
+type AppState = {
+  [type: string]: { id: string; x: number; y: number };
+};
+
+function getInitialState(): AppState {
+  const id1 = uuid();
+  const id2 = uuid();
+
+  return {
+    [id1]: {
+      id: id1,
+      x: 10,
+      y: 10
+    },
+    [id2]: {
+      id: id2,
+      x: 100,
+      y: 100
+    }
+  };
+}
+
+type AppActions =
+  | {
+      type: "move";
+      id: string;
+      deltaX: number;
+      deltaY: number;
+    }
+  | {
+      type: "add";
+      id: string;
+      x: number;
+      y: number;
+    };
+
+const circlesReducer: React.Reducer<AppState, AppActions> = (state, action) => {
+  switch (action.type) {
+    case "move": {
+      const { deltaX, deltaY, id } = action;
+      const base = state[id];
+      return {
+        ...state,
+        [id]: {
+          ...base,
+          x: base.x + deltaX,
+          y: base.y + deltaY
+        }
+      };
+    }
+    case "add": {
+      const { id, x, y } = action;
+      return {
+        ...state,
+        [id]: { id, x, y }
+      };
+    }
+    default:
+      return state;
+  }
+};
+
 {
-  // Give React's useState hook the correct types
-  // https://reactjs.org/docs/hooks-state.html
+  // In this exercise a React reducer must be typed correctly
 
-  function useState(initial: any): any {
-    throw new Error("Not implemented") // ignore this line
-  }
+  // First, define the type of `AppState`, and make sure it is returned from getInitialState
 
-  // Should pass 
-  {
-    const [val, updater] = useState(3)
-    // val has the type of the initial value
-    const x: number = val
-    // updater can be called with the same type
-    updater(4)
-  }
-  {
-    // initializer can be a function that produces the initial value
-    const [val, updater] = useState(() => 3)
-    const x: number = val
-    updater(4)
-    // updater can be a function that takes the current state to produce the next state
-    updater(num => num * 2)
-  }
-  // Should have compile error:
-  {
-    const [val, updater] = useState(3)
-    // value is not a boolean but a number
-    const x: boolean = val
-  }
-  {
-    const [val, updater] = useState(3)
-    // wrong type, "test" is not a number
-    updater("test")
-  }
-  {
-    // useState returns a fixed-length tuple
-    const [a, b, c] = useState(3)
-  }
+  // Then, define the possible action types correctly
+
+  const [state, dispatch] = useReducer(circlesReducer, getInitialState());
+
+  // OK
+  const x: number = state["xyz"].x;
+
+  dispatch({
+    type: "move",
+    id: "xyz",
+    deltaX: 3,
+    deltaY: 2
+  });
+
+  // Also verify: action parameters inside the reducer should be correctly inferred!
+
+  // Not OK! Following statements should all fail:
+  const y: string = state["xyz"].x;
+
+  dispatch({
+    type: "move",
+    id: "xyz",
+    deltaX: "3",
+    deltaY: 2
+  });
+
+  dispatch({
+    type: "add"
+  });
+
+  dispatch({
+    type: "test"
+  });
 }
